@@ -12,6 +12,7 @@ import { PanelHeader } from "@/components/shell/PanelHeader";
 import { DropZone } from "@/components/shell/DropZone";
 import { usePackage } from "./PackageContext";
 import { BundleRow } from "./BundleRow";
+import { LoadKitButton } from "./LoadKitButton";
 import { buildBundleZip, normalizeZipName } from "./buildZip";
 import "./package.css";
 
@@ -46,6 +47,16 @@ export function PackageCanvas({ isDark }: ModeSurfaceProps) {
         multiple
         onFiles={addFiles}
         buttonLabel="Select files"
+        footer={
+          <div className="fb-dropzone-kit">
+            <span className="fb-dropzone-kit-or">or</span>
+            <LoadKitButton />
+            <span className="fb-dropzone-kit-hint">
+              Fill the list from an Opsette <code>.opsette-kit.json</code> — logo, QR, card,
+              signature, and social assets, all at once.
+            </span>
+          </div>
+        }
       />
     );
   }
@@ -74,6 +85,7 @@ export function PackageCanvas({ isDark }: ModeSurfaceProps) {
           <Button icon={<PlusOutlined />} onClick={() => addRef.current?.click()}>
             Add files
           </Button>
+          <LoadKitButton />
           <Button icon={<ClearOutlined />} onClick={clearAll} danger>
             Clear
           </Button>

@@ -50,6 +50,8 @@ interface PackageState {
   zipName: string;
   setZipName: (n: string) => void;
   addFiles: (incoming: File[]) => void;
+  /** Add files that already carry a chosen name + folder (e.g. kit quick-fill). */
+  addPreparedFiles: (incoming: { file: File; name: string; folder: string }[]) => void;
   updateItem: (id: string, patch: Partial<Pick<BundleItem, "name" | "folder">>) => void;
   removeItem: (id: string) => void;
   clearAll: () => void;
@@ -119,6 +121,23 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     ]);
   }, []);
 
+  const addPreparedFiles = useCallback(
+    (incoming: { file: File; name: string; folder: string }[]) => {
+      setItems((prev) => [
+        ...prev,
+        ...incoming.map(({ file, name, folder }) => ({
+          id: uuid(),
+          file,
+          name,
+          folder,
+          size: file.size,
+          type: file.type,
+        })),
+      ]);
+    },
+    [],
+  );
+
   const updateItem = useCallback(
     (id: string, patch: Partial<Pick<BundleItem, "name" | "folder">>) => {
       setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -152,13 +171,14 @@ export function PackageProvider({ children }: { children: ReactNode }) {
       zipName,
       setZipName,
       addFiles,
+      addPreparedFiles,
       updateItem,
       removeItem,
       clearAll,
       folders,
       totalBytes,
     }),
-    [items, zipName, addFiles, updateItem, removeItem, clearAll, folders, totalBytes],
+    [items, zipName, addFiles, addPreparedFiles, updateItem, removeItem, clearAll, folders, totalBytes],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

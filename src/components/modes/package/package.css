@@ -213,3 +213,36 @@
     display: none;
   }
 }
+
+/* ---- "Load an Opsette kit" footer under the empty-state drop zone -------- */
+.fb-dropzone-kit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  max-width: 420px;
+}
+
+.fb-dropzone-kit-or {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fb-text-dim);
+}
+
+.fb-dropzone-kit-hint {
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--fb-text-dim);
+}
+
+.fb-dropzone-kit-hint code {
+  font-size: 11.5px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--fb-panel-bg);
+  border: 1px solid var(--fb-panel-border);
+}
