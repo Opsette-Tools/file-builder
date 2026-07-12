@@ -1,0 +1,334 @@
+/**
+ * File Builder shell — the Smallpdf-shaped three-zone workspace that sits below
+ * the shared Opsette header.
+ *
+ *   [ rail | full-bleed canvas | control panel ]
+ *
+ * The rail is the mode switcher, the canvas is the wide hero, the panel holds
+ * per-mode options. Full-bleed on purpose (Ruthnie's directive): NO max-width
+ * page container — the workspace uses the whole viewport width.
+ *
+ * Colors read from CSS variables so light/dark is one cascade, set on the
+ * .fb-shell root via [data-fb-theme].
+ */
+
+.fb-shell {
+  /* Light theme surfaces */
+  --fb-canvas-bg: #eef1f6;
+  --fb-panel-bg: #ffffff;
+  --fb-panel-border: #e6e9ee;
+  /* Opsette brand green (matches the header accent + primary buttons) so the
+     rail reads as ours, not borrowed Smallpdf chrome. */
+  --fb-rail-bg: #2f4f46;
+  --fb-rail-fg: #b9cbc4;
+  --fb-rail-fg-active: #ffffff;
+  --fb-rail-hover-bg: rgba(255, 255, 255, 0.08);
+  --fb-drop-border: #c3ccdb;
+  --fb-drop-bg: #ffffff;
+  --fb-drop-bg-hover: #f5f8ff;
+  --fb-text: #1f2430;
+  --fb-text-dim: #6b7686;
+
+  display: flex;
+  width: 100%;
+  /* Fill the flex:1 Content region (Shell.tsx locks the app to 100vh and stops
+     the body from scrolling). Layout is [rail | right-column]: the rail owns the
+     full left edge floor-to-ceiling; the right column stacks workspace + footer.
+     min-height:0 lets the internal scrollers actually shrink. */
+  height: 100%;
+  min-height: 0;
+}
+
+/* Center column: canvas grows to fill, footer tucked at its bottom. This column
+   sits BETWEEN the full-height rail and the full-height panel, so both side
+   columns run floor-to-ceiling and the footer only spans the canvas width —
+   no short/gappy edge on either side. */
+.fb-center {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--fb-canvas-bg);
+}
+
+.fb-footer {
+  flex: 0 0 auto;
+}
+
+.fb-shell[data-fb-theme="dark"] {
+  --fb-canvas-bg: #0b0f17;
+  --fb-panel-bg: #12161f;
+  --fb-panel-border: #232a36;
+  /* A deep green-tinted charcoal — the brand green pushed dark so it stays in
+     the family without glowing against the near-black canvas. */
+  --fb-rail-bg: #16241f;
+  --fb-rail-fg: #8fa39b;
+  --fb-rail-fg-active: #ffffff;
+  --fb-rail-hover-bg: rgba(255, 255, 255, 0.06);
+  --fb-drop-border: #2c3440;
+  --fb-drop-bg: #161b25;
+  --fb-drop-bg-hover: #1b2130;
+  --fb-text: #e6e9ee;
+  --fb-text-dim: #8b95a8;
+}
+
+/* ---- Left mode rail ------------------------------------------------------ */
+.fb-rail {
+  flex: 0 0 88px;
+  width: 88px;
+  background: var(--fb-rail-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px 0;
+  gap: 2px;
+  /* Static full-height column inside the fixed-height workspace row. It fills
+     the height and never scrolls — you never see its bottom. If the mode list
+     ever outgrows the viewport, only THEN does the rail scroll internally. */
+  height: 100%;
+  overflow-y: auto;
+}
+
+.fb-rail-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--fb-rail-fg);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 4px;
+  margin: 0 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.fb-rail-item:hover {
+  background: var(--fb-rail-hover-bg);
+  color: var(--fb-rail-fg-active);
+}
+
+.fb-rail-item[data-active="true"] {
+  color: var(--fb-rail-fg-active);
+  /* the active mode's accent, passed inline as --fb-accent */
+  background: var(--fb-accent, rgba(255, 255, 255, 0.12));
+}
+
+.fb-rail-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.fb-rail-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-rail-soon {
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* ---- Center canvas ------------------------------------------------------- */
+.fb-canvas {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  background: var(--fb-canvas-bg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  /* Grows to fill the center column and owns its own vertical scroll, so the
+     rail + panel stay pinned and the footer sits just below it. */
+  overflow-y: auto;
+}
+
+.fb-canvas-inner {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 420px;
+}
+
+/* ---- DropZone (the big canvas empty-state upload affordance) ------------- */
+.fb-dropzone {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 40px 24px;
+  border: 2px dashed var(--fb-drop-border);
+  border-radius: 20px;
+  background: var(--fb-drop-bg);
+  color: var(--fb-text);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.fb-dropzone:hover,
+.fb-dropzone:focus-visible {
+  background: var(--fb-drop-bg-hover);
+  border-color: var(--fb-accent, #2f4f46);
+  outline: none;
+}
+
+.fb-dropzone[data-dragover="true"] {
+  background: var(--fb-drop-bg-hover);
+  border-color: var(--fb-accent, #2f4f46);
+  border-style: solid;
+}
+
+.fb-dropzone-icon {
+  font-size: 56px;
+  color: var(--fb-accent, #2f4f46);
+  opacity: 0.9;
+}
+
+.fb-dropzone-title {
+  color: var(--fb-text) !important;
+}
+
+.fb-dropzone-blurb {
+  color: var(--fb-text-dim) !important;
+  max-width: 460px;
+}
+
+.fb-dropzone-btn {
+  margin-top: 4px;
+  min-width: 168px;
+}
+
+.fb-dropzone-hint {
+  font-size: 12px;
+  color: var(--fb-text-dim);
+}
+
+/* Accepted-format chips */
+.fb-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.fb-chip-label {
+  font-size: 11px;
+  color: var(--fb-text-dim);
+  margin-right: 2px;
+}
+
+.fb-chip {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fb-text-dim);
+  background: color-mix(in srgb, var(--fb-drop-border) 40%, transparent);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+/* ---- Panel header (mode icon + title) ------------------------------------ */
+.fb-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.fb-panel-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 17px;
+  color: #fff;
+}
+
+.fb-panel-header-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--fb-text);
+}
+
+/* ---- Right control panel ------------------------------------------------- */
+.fb-panel {
+  flex: 0 0 380px;
+  width: 380px;
+  background: var(--fb-panel-bg);
+  border-left: 1px solid var(--fb-panel-border);
+  padding: 24px;
+  /* Panel owns its own scroll too, so a long options list never moves the rail. */
+  height: 100%;
+  overflow-y: auto;
+  color: var(--fb-text);
+}
+
+/* ---- Mobile: rail becomes a top bar, panel drops below the canvas -------- */
+@media (max-width: 900px) {
+  .fb-shell {
+    flex-direction: column;
+    /* Release the desktop fixed height — on mobile the whole PAGE scrolls, the
+       rail rides along as a sticky top bar, and the canvas/panel flow full. */
+    height: auto;
+    min-height: 0;
+  }
+
+  .fb-canvas,
+  .fb-panel {
+    height: auto;
+    overflow: visible;
+  }
+
+  .fb-rail {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px;
+    gap: 4px;
+    position: sticky;
+    top: 60px;
+    z-index: 5;
+  }
+
+  .fb-rail-item {
+    flex: 0 0 auto;
+    min-width: 72px;
+    margin: 0;
+    padding: 8px 6px;
+  }
+
+  .fb-canvas {
+    padding: 16px;
+  }
+
+  .fb-canvas-inner {
+    min-height: 320px;
+  }
+
+  .fb-panel {
+    flex: 0 0 auto;
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--fb-panel-border);
+  }
+}
