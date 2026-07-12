@@ -25,10 +25,22 @@ function triggerDownload(blob: Blob, fileName: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
+  // rel=noopener + target=_self keep it a same-tab download, not a navigation a
+  // browser might route through the SPA/service worker.
+  a.rel = "noopener";
+  a.target = "_self";
+  a.style.display = "none";
   document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  // Dispatch a real MouseEvent rather than .click(): after an await, some
+  // browsers treat a bare .click() as non-user-initiated and quietly drop the
+  // download. An explicit MouseEvent is reliably honored.
+  a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  // Keep the object URL alive a bit longer — revoking too soon can abort the
+  // download before the browser has read the blob.
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 4000);
 }
 
 /* ------------------------------------------------------------------ Canvas */
@@ -38,26 +50,30 @@ export function PackageCanvas({ isDark }: ModeSurfaceProps) {
   const addRef = useRef<HTMLInputElement>(null);
 
   // Empty state: the big inviting drop zone (the hero). Any files, any number.
+  // The "Load an Opsette kit" affordance lives BELOW the drop zone as a sibling,
+  // NOT inside it — the drop zone's whole surface is one big click target that
+  // opens its own file picker, so nesting a button in it made the two pickers
+  // fight (and a picked .json got added as a raw file instead of being parsed).
   if (items.length === 0) {
     return (
-      <DropZone
-        title="Drop files to bundle"
-        blurb="Add any files — documents, images, whatever. Name them, group them into folders if you like, and download one clean ZIP."
-        accepts={["Any file type"]}
-        multiple
-        onFiles={addFiles}
-        buttonLabel="Select files"
-        footer={
-          <div className="fb-dropzone-kit">
-            <span className="fb-dropzone-kit-or">or</span>
-            <LoadKitButton />
-            <span className="fb-dropzone-kit-hint">
-              Fill the list from an Opsette <code>.opsette-kit.json</code> — logo, QR, card,
-              signature, and social assets, all at once.
-            </span>
-          </div>
-        }
-      />
+      <div className="fb-empty-stack">
+        <DropZone
+          title="Drop files to bundle"
+          blurb="Add any files — documents, images, whatever. Name them, group them into folders if you like, and download one clean ZIP."
+          accepts={["Any file type"]}
+          multiple
+          onFiles={addFiles}
+          buttonLabel="Select files"
+        />
+        <div className="fb-dropzone-kit">
+          <span className="fb-dropzone-kit-or">or</span>
+          <LoadKitButton />
+          <span className="fb-dropzone-kit-hint">
+            Fill the list from an Opsette <code>.opsette-kit.json</code> — logo, QR, card,
+            signature, and social assets, all at once.
+          </span>
+        </div>
+      </div>
     );
   }
 
@@ -128,12 +144,25 @@ export function PackagePanel({ isDark }: ModeSurfaceProps) {
 
   const onDownload = async () => {
     setBuilding(true);
+    // Let React actually PAINT the loading state before we start the heavy,
+    // main-thread jszip work — otherwise the spinner never appears and the tab
+    // just freezes with no feedback. Two rAFs guarantees a committed frame.
+    await new Promise<void>((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => r())),
+    );
+    const t0 = performance.now();
     try {
       const result = await buildBundleZip({ items, zipName });
+      const ms = Math.round(performance.now() - t0);
+      console.info(`[File Builder] ZIP built in ${ms}ms (${result.fileCount} files)`);
       triggerDownload(result.blob, result.fileName);
-      message.success(`ZIP built — ${result.fileCount} file${result.fileCount === 1 ? "" : "s"}`);
-    } catch {
-      message.error("Couldn't build the ZIP — please try again.");
+      message.success(
+        `ZIP built in ${(ms / 1000).toFixed(1)}s — ${result.fileCount} file${result.fileCount === 1 ? "" : "s"}`,
+      );
+    } catch (err) {
+      console.error("[File Builder] ZIP build failed:", err);
+      const detail = err instanceof Error ? err.message : String(err);
+      message.error(`Couldn't build the ZIP — ${detail}`);
     } finally {
       setBuilding(false);
     }
@@ -208,12 +237,15 @@ export function PackagePanel({ isDark }: ModeSurfaceProps) {
               icon={<DownloadOutlined />}
               block
               loading={building}
+              disabled={building}
               onClick={onDownload}
             >
-              Download ZIP
+              {building ? "Building ZIP…" : "Download ZIP"}
             </Button>
             <Text type="secondary" style={{ fontSize: 12, textAlign: "center", display: "block" }}>
-              Built in your browser — nothing is uploaded.
+              {building
+                ? "Packing your files — this stays in your browser."
+                : "Built in your browser — nothing is uploaded."}
             </Text>
           </Space>
         </>

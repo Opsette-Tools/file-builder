@@ -91,6 +91,7 @@ const F_SIGNATURE = "Email_Signature";
 const F_CARD = "Digital_Card";
 const F_SOCIAL = "Social_Banner";
 const F_ICONS = "Icons";
+const F_PALETTE = "Color_Palette";
 
 /* ------------------------------------------------------ social routing */
 
@@ -177,6 +178,21 @@ export function parseOpsetteKit(rawText: string): KitParseResult {
     dataUrlToFile(board.logoDataUrl, `${brandStem}_logo.${imageExt(board.logoDataUrl)}`),
     `${brandStem}_logo.${imageExt(board.logoDataUrl)}`,
     F_LOGO,
+  );
+
+  // Color palette — the rendered swatch sheet (PNG) and the copyable-hex PDF that
+  // Palette Studio bakes into its blob and Brand Board carries through. Both land
+  // in a Color_Palette folder. dataUrlToFile reads the MIME, so it wraps the PDF
+  // (application/pdf) just as cleanly as the PNG.
+  push(
+    dataUrlToFile(board.paletteImageDataUrl, `${brandStem}_palette.${imageExt(board.paletteImageDataUrl)}`),
+    `${brandStem}_palette.${imageExt(board.paletteImageDataUrl)}`,
+    F_PALETTE,
+  );
+  push(
+    dataUrlToFile(board.palettePdfDataUrl, `${brandStem}_palette.pdf`),
+    `${brandStem}_palette.pdf`,
+    F_PALETTE,
   );
 
   // QR code — sits at the root of the kit.

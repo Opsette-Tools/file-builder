@@ -22,7 +22,12 @@ export default defineConfig(({ command }) => ({
       manifest: false,
       workbox: {
         navigateFallback: "index.html",
-        navigateFallbackDenylist: [/^\/~oauth/],
+        // Never let the SPA navigate-fallback intercept a blob: download. When a
+        // programmatic `<a download href="blob:...">` click is treated as a
+        // navigation, the fallback would serve index.html and the download would
+        // silently fail (ZIP "builds" but never lands). Deny blob:/data: so those
+        // navigations pass through untouched. (/~oauth stays denied as before.)
+        navigateFallbackDenylist: [/^\/~oauth/, /^blob:/, /^data:/],
         globPatterns: ["**/*.{js,css,html,svg,png,ico,webp}"],
         // og-image.png is only fetched by social scrapers from the live server,
         // never by the app — keep it out of the offline precache (it also

@@ -60,7 +60,13 @@ export function LoadKitButton({
         type={type}
         block={block}
         icon={<AppstoreAddOutlined />}
-        onClick={() => inputRef.current?.click()}
+        onClick={(e) => {
+          // In the empty state this button sits inside the DropZone, whose own
+          // container onClick also opens a file picker. Stop the bubble so only
+          // OUR kit picker opens (otherwise the two dialogs fight each other).
+          e.stopPropagation();
+          inputRef.current?.click();
+        }}
       >
         Load an Opsette kit
       </Button>
