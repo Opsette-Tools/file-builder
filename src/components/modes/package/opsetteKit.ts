@@ -198,10 +198,18 @@ export function parseOpsetteKit(rawText: string): KitParseResult {
   // QR code — sits at the root of the kit.
   push(dataUrlToFile(board.qrDataUrl, "qr_code.png"), "qr_code.png", "");
 
-  // Digital card.
+  // Digital card — the visual PNG plus, when present, the vCard (.vcf) the
+  // client saves to their own phone contacts. dataUrlToFile reads the MIME, so
+  // it wraps text/vcard as cleanly as an image. `cardVcardDataUrl` is baked by
+  // Digital Card and carried through Brand Board (see BRAND-KIT-INTEROP-CONTRACT).
   push(
     dataUrlToFile(board.cardDataUrl, `digital_card.${imageExt(board.cardDataUrl)}`),
     `digital_card.${imageExt(board.cardDataUrl)}`,
+    F_CARD,
+  );
+  push(
+    dataUrlToFile(board.cardVcardDataUrl, `${brandStem}_contact.vcf`),
+    `${brandStem}_contact.vcf`,
     F_CARD,
   );
 
