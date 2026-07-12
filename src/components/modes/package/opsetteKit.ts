@@ -18,10 +18,13 @@
  * an empty result with a friendly reason, so the caller can show a gentle
  * "that's not an Opsette kit file" message instead of crashing.
  *
- * The PDFs a real kit also needs (Brand_Board.pdf, Color_Palette.pdf,
- * Font_Pairing.pdf) live OUTSIDE the blob system — they're downloads, not inline
- * data. The quick-fill fills everything that IS a blob; the user drags those few
- * PDFs in manually afterward, exactly as the delivery workflow expects.
+ * Self-inclusion: Brand Board now bakes its OWN designed pages into the blob too
+ * — each page as a numbered PNG (pageRenders) plus the whole board as one
+ * flippable PDF (pagesPdf) — so they ride inside the one kit file and this
+ * quick-fill routes them to a Brand_Board/ folder like everything else. The
+ * palette PNG/PDF also ride in the blob (paletteImageDataUrl/palettePdfDataUrl).
+ * Any remaining hand-authored PDFs (e.g. a separate Font_Pairing.pdf) can still
+ * be dragged in manually, but the core kit is now fully blob-carried.
  */
 
 /* ------------------------------------------------------------ data-url decode */
@@ -92,6 +95,18 @@ const F_CARD = "Digital_Card";
 const F_SOCIAL = "Social_Banner";
 const F_ICONS = "Icons";
 const F_PALETTE = "Color_Palette";
+const F_BRAND_BOARD = "Brand_Board";
+
+// Brand Board's own designed pages, baked into the kit as PNGs keyed by page id
+// (self-inclusion). Numbered so they sort in order in the client's folder,
+// directly fixing the "can't hit Next / files out of order" pain. Any page id
+// not listed here still routes (falls back to a plain numbered name).
+const BOARD_PAGE_ORDER: { key: string; name: string }[] = [
+  { key: "foundation", name: "01_Foundation.png" },
+  { key: "applications", name: "02_Applications.png" },
+  { key: "social", name: "03_Social.png" },
+  { key: "guide", name: "04_Guide.png" },
+];
 
 /* ------------------------------------------------------ social routing */
 
@@ -233,6 +248,37 @@ export function parseOpsetteKit(rawText: string): KitParseResult {
       push(dataUrlToFile(asset.image, name), name, folder);
     });
   }
+
+  // Brand Board's OWN designed pages (self-inclusion) — the frozen PNG of each
+  // present page, baked into the kit at Save. These are the deliverable the kit
+  // was always meant to carry; before self-inclusion they fell out as loose
+  // downloads. Route the known pages in canonical numbered order, then sweep any
+  // extra/unknown page ids so a future page still lands somewhere sensible.
+  if (board.pageRenders && typeof board.pageRenders === "object") {
+    const renders = board.pageRenders as Record<string, unknown>;
+    const routed = new Set<string>();
+    BOARD_PAGE_ORDER.forEach(({ key, name }) => {
+      if (renders[key] == null) return;
+      routed.add(key);
+      push(dataUrlToFile(renders[key], name), name, F_BRAND_BOARD);
+    });
+    let extra = BOARD_PAGE_ORDER.length;
+    Object.keys(renders).forEach((key) => {
+      if (routed.has(key)) return;
+      extra += 1;
+      const name = `${String(extra).padStart(2, "0")}_${slugify(key, "page")}.png`;
+      push(dataUrlToFile(renders[key], name), name, F_BRAND_BOARD);
+    });
+  }
+
+  // The whole board as one flippable PDF — the single hand-off doc, baked in
+  // alongside the page PNGs. (Previously a manual drag-in; now it rides in the
+  // blob like everything else.)
+  push(
+    dataUrlToFile(board.pagesPdf, `${brandStem}_brand_board.pdf`),
+    `${brandStem}_brand_board.pdf`,
+    F_BRAND_BOARD,
+  );
 
   if (files.length === 0) {
     return EMPTY_FAIL(
