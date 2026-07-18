@@ -249,6 +249,26 @@ export function parseOpsetteKit(rawText: string): KitParseResult {
     });
   }
 
+  // Banner Designer's banners — a separate board slot from socialAssets (so Icon
+  // Kit and Banner Designer don't overwrite each other), but the same asset shape.
+  // They're social banners, so they route to the Social_Banner folder like Icon
+  // Kit's banners. Same de-collision within the run.
+  if (Array.isArray(board.bannerAssets)) {
+    const usedNames = new Map<string, number>();
+    board.bannerAssets.forEach((raw, i) => {
+      if (!raw || typeof raw !== "object") return;
+      const asset = raw as SocialAsset;
+      const ext = imageExt(asset.image);
+      const label = typeof asset.label === "string" ? asset.label : "";
+      const stem = slugify(label, `banner_${i + 1}`);
+      const key = `${F_SOCIAL}/${stem}`;
+      const seen = usedNames.get(key) ?? 0;
+      usedNames.set(key, seen + 1);
+      const name = seen === 0 ? `${stem}.${ext}` : `${stem}_${seen + 1}.${ext}`;
+      push(dataUrlToFile(asset.image, name), name, F_SOCIAL);
+    });
+  }
+
   // Brand Board's OWN designed pages (self-inclusion) — the frozen PNG of each
   // present page, baked into the kit at Save. These are the deliverable the kit
   // was always meant to carry; before self-inclusion they fell out as loose
