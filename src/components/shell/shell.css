@@ -90,6 +90,39 @@
   overflow-y: auto;
 }
 
+/* Each rail entry is wrapped so a group divider can precede it. The wrapper is
+   transparent — it just carries the optional divider above its button. */
+.fb-rail-slot {
+  display: contents;
+}
+
+/* Divider between rail clusters (file utilities → PDF editing). A hairline with
+   a tiny centered label so the two families read as distinct. */
+.fb-rail-divider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 12px 4px;
+  color: var(--fb-rail-fg);
+  opacity: 0.55;
+}
+
+.fb-rail-divider::before,
+.fb-rail-divider::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+.fb-rail-divider-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .fb-rail-item {
   appearance: none;
   border: none;
@@ -267,6 +300,44 @@
   color: var(--fb-text);
 }
 
+/* ---- Shared panel primitives (used by every mode's control panel) -------- */
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.fb-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fb-text);
+}
+
+.fb-field-hint {
+  font-size: 11.5px;
+}
+
+.fb-field-hint code {
+  font-size: 11px;
+  background: var(--fb-drop-bg-hover);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.fb-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fb-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+}
+
 /* ---- Right control panel ------------------------------------------------- */
 .fb-panel {
   flex: 0 0 380px;
@@ -315,6 +386,24 @@
     min-width: 72px;
     margin: 0;
     padding: 8px 6px;
+  }
+
+  /* On the horizontal mobile rail the cluster divider becomes a vertical
+     hairline between the two groups; the label would crowd the row, so drop it. */
+  .fb-rail-divider {
+    flex-direction: column;
+    align-self: stretch;
+    margin: 4px 2px;
+  }
+
+  .fb-rail-divider::before,
+  .fb-rail-divider::after {
+    width: 1px;
+    height: auto;
+  }
+
+  .fb-rail-divider-label {
+    display: none;
   }
 
   .fb-canvas {

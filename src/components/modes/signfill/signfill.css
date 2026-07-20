@@ -1,0 +1,231 @@
+/**
+ * Sign & Fill mode — the page render with an HTML overlay layer on top. The user
+ * places text / signature / white-out / checkmark boxes that float over the
+ * page image; on download they're flattened into the real PDF. Reads the shell's
+ * --fb-* theme variables.
+ */
+
+.fb-sf {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.fb-sf-loading {
+  font-size: 13px;
+}
+
+.fb-sf-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 4px;
+  width: 100%;
+}
+
+/* One rendered page + its overlay layer. */
+.fb-sf-page {
+  position: relative;
+  background: #fff;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.18);
+  border-radius: 2px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.fb-sf-page-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ---- Fix-mode hint + click-to-match hit layer ---------------------------- */
+.fb-sf-fixhint {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c3aed;
+  background: color-mix(in srgb, #7c3aed 12%, transparent);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+/* Invisible clickable box over an existing text run; highlights on hover so you
+   can see what you're about to fix. */
+.fb-sf-hit {
+  position: absolute;
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 3px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  transition: background 100ms ease, border-color 100ms ease;
+  z-index: 3;
+}
+
+.fb-sf-hit:hover {
+  background: color-mix(in srgb, #7c3aed 22%, transparent);
+  border-color: #7c3aed;
+}
+
+/* ---- Overlay box --------------------------------------------------------- */
+.fb-ob {
+  position: absolute;
+  box-sizing: border-box;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  border: 1px dashed transparent;
+  touch-action: none;
+}
+
+.fb-ob:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+.fb-ob[data-selected="true"] {
+  border: 1px solid #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+}
+
+.fb-ob-text {
+  white-space: pre;
+  line-height: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.fb-ob-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.fb-ob-whiteout {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  /* A faint outline only while editing, so an all-white box is still visible on
+     a white page. It is NOT drawn into the exported PDF. */
+  outline: 1px solid rgba(124, 58, 237, 0.25);
+  /* Let pointer events fall through to the box itself so it stays draggable and
+     selectable. */
+  pointer-events: none;
+}
+
+.fb-ob-del {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.fb-ob-resize {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: #7c3aed;
+  border: 2px solid #fff;
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 2;
+}
+
+/* ---- Panel tool palette -------------------------------------------------- */
+.fb-sf-tools {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.fb-sf-tool {
+  appearance: none;
+  border: 1px solid var(--fb-panel-border);
+  background: var(--fb-panel-bg);
+  color: var(--fb-text);
+  border-radius: 10px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.fb-sf-tool:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
+
+.fb-sf-tool :first-child {
+  font-size: 20px;
+}
+
+.fb-sf-textopts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+  margin-top: 8px;
+}
+
+.fb-sf-color {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fb-sf-bgrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- Signature pad ------------------------------------------------------- */
+.fb-sigpad {
+  width: 100%;
+  height: 200px;
+  border: 2px dashed #c3ccdb;
+  border-radius: 10px;
+  background: #fff;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+@media (max-width: 900px) {
+  .fb-sf-tools {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

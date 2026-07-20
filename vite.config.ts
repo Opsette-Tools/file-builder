@@ -28,7 +28,11 @@ export default defineConfig(({ command }) => ({
         // silently fail (ZIP "builds" but never lands). Deny blob:/data: so those
         // navigations pass through untouched. (/~oauth stays denied as before.)
         navigateFallbackDenylist: [/^\/~oauth/, /^blob:/, /^data:/],
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,webp}"],
+        // Include .mjs so the pdf.js worker is precached for offline use.
+        globPatterns: ["**/*.{js,mjs,css,html,svg,png,ico,webp}"],
+        // The pdf.js worker is ~1 MiB; bump the precache ceiling above the 2 MiB
+        // default so the build doesn't reject it.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // og-image.png is only fetched by social scrapers from the live server,
         // never by the app — keep it out of the offline precache (it also
         // exceeds the 2 MiB precache limit and would fail the build).

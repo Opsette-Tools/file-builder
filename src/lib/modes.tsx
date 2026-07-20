@@ -5,8 +5,12 @@ import {
   SwapOutlined,
   ExpandOutlined,
   FilePdfOutlined,
+  AppstoreOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { PackagePanel, PackageCanvas } from "@/components/modes/package/PackageMode";
+import { OrganizeCanvas, OrganizePanel } from "@/components/modes/organize/OrganizeMode";
+import { SignFillCanvas, SignFillPanel } from "@/components/modes/signfill/SignFillMode";
 import { ComingSoonPanel, ComingSoonCanvas } from "@/components/modes/ComingSoon";
 
 /**
@@ -24,7 +28,17 @@ export type ModeId =
   | "compress"
   | "convert"
   | "resize"
-  | "images-to-pdf";
+  | "images-to-pdf"
+  | "organize"
+  | "sign-fill";
+
+/**
+ * Rail groups. The rail is drawn flat, but a small divider is inserted whenever
+ * the group changes between two adjacent modes. Image/file utilities and PDF
+ * editing are different families (one operates on images, the other on a PDF you
+ * already have), so they read as two labeled clusters — Ruthnie's directive.
+ */
+export type ModeGroup = "file" | "pdf";
 
 /** Props both the Canvas and Panel of a mode receive from the shell. */
 export interface ModeSurfaceProps {
@@ -34,6 +48,11 @@ export interface ModeSurfaceProps {
 
 export interface ModeDef {
   id: ModeId;
+  /**
+   * Which rail cluster this mode belongs to. A divider is drawn in the rail
+   * whenever this differs from the previous mode's group. Defaults to "file".
+   */
+  group?: ModeGroup;
   /** Short label under the rail icon and in the panel title. */
   label: string;
   /** One-line description shown in the canvas empty state. */
@@ -110,6 +129,30 @@ export const MODES: ModeDef[] = [
     ready: false,
     Canvas: ComingSoonCanvas,
     Panel: ComingSoonPanel,
+  },
+  {
+    id: "organize",
+    group: "pdf",
+    label: "Organize",
+    blurb: "Reorder, rotate, delete, and extract pages — or merge several PDFs into one.",
+    icon: <AppstoreOutlined />,
+    accent: "#0f766e",
+    accepts: ["PDF"],
+    ready: true,
+    Canvas: OrganizeCanvas,
+    Panel: OrganizePanel,
+  },
+  {
+    id: "sign-fill",
+    group: "pdf",
+    label: "Sign & Fill",
+    blurb: "Add a signature, type text, drop a date or checkmark, or cover-and-replace — right in your browser.",
+    icon: <EditOutlined />,
+    accent: "#7c3aed",
+    accepts: ["PDF"],
+    ready: true,
+    Canvas: SignFillCanvas,
+    Panel: SignFillPanel,
   },
 ];
 

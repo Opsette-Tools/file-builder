@@ -117,43 +117,9 @@
   background: rgba(192, 57, 43, 0.1);
 }
 
-/* ---- Panel: field + summary + folder chips ------------------------------- */
-.fb-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.fb-field-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--fb-text);
-}
-
-.fb-field-hint {
-  font-size: 11.5px;
-}
-
-.fb-field-hint code {
-  font-size: 11px;
-  background: var(--fb-drop-bg-hover);
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-
-.fb-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fb-summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 13px;
-}
-
+/* ---- Panel: folder chips ------------------------------------------------- */
+/* NOTE: the shared panel primitives (.fb-field*, .fb-summary*) now live in
+   shell.css so every mode's panel reads them from one place. */
 .fb-folder-list {
   margin-top: 16px;
   display: flex;

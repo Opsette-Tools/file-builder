@@ -13,14 +13,18 @@ export default function AboutModal({ open, onClose }: AboutModalProps) {
     <Modal open={open} onCancel={onClose} footer={null} title="About File Builder">
       <Title level={5} style={{ marginTop: 0 }}>A file workshop from Opsette</Title>
       <Paragraph>
-        File Builder packages a finished client brand kit into one clean,
-        labeled ZIP you can hand off. Drop each asset into its slot, name the
-        brand, and download a tidy folder that looks professional out of the box.
+        File Builder bundles any pile of files into one clean, labeled ZIP.
+        Drop them in, rename them, group them into folders, and download a tidy
+        archive you can hand off.
       </Paragraph>
       <Paragraph>
-        It also handles everyday file work: compress an image, convert between
-        PNG, JPG, and WebP, resize to a target size, and more over time. Every
-        job runs in your browser, so nothing you touch is uploaded anywhere.
+        It also edits PDFs. Reorder or rotate pages, delete the ones you don't
+        need, or merge several PDFs into one. Add a signature, type text, drop in
+        a date, or cover and replace something that came out wrong.
+      </Paragraph>
+      <Paragraph>
+        Everything runs in your browser. Your files never leave your machine and
+        there's no account to sign up for, which is the whole point.
       </Paragraph>
       <OpsetteFooterLogo />
     </Modal>

@@ -4,6 +4,8 @@ import { ThemeProvider, useThemeMode } from "@/lib/theme";
 import Shell from "@/components/Shell";
 import { AppShell } from "@/components/shell/AppShell";
 import { PackageProvider } from "@/components/modes/package/PackageContext";
+import { OrganizeProvider } from "@/components/modes/organize/OrganizeContext";
+import { SignFillProvider } from "@/components/modes/signfill/SignFillContext";
 import type { ModeId } from "@/lib/modes";
 
 /**
@@ -36,7 +38,11 @@ export function FileBuilderApp() {
     <ThemeProvider>
       <AntApp>
         <PackageProvider>
-          <FileBuilderInner />
+          <OrganizeProvider>
+            <SignFillProvider>
+              <FileBuilderInner />
+            </SignFillProvider>
+          </OrganizeProvider>
         </PackageProvider>
       </AntApp>
     </ThemeProvider>

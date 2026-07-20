@@ -31,8 +31,9 @@ export function ComingSoonCanvas({ isDark }: ModeSurfaceProps) {
         This tool is on the way
       </Title>
       <Text type="secondary" style={{ maxWidth: 380 }}>
-        We're building this one honestly, so it ships when it actually works —
-        not a moment sooner. For now, use the Package tool to bundle a kit.
+        We're building this one honestly, so it ships when it actually works.
+        For now, try Bundle to zip files, or the Organize and Sign &amp; Fill
+        tools to work on a PDF.
       </Text>
     </div>
   );
