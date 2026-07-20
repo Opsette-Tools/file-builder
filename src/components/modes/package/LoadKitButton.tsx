@@ -31,7 +31,7 @@ export function LoadKitButton({
       message.error("Couldn't read that file.");
       return;
     }
-    const result = parseOpsetteKit(text);
+    const result = await parseOpsetteKit(text);
     if (result.error) {
       message.warning(result.error);
       return;

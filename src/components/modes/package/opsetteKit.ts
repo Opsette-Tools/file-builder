@@ -32,11 +32,18 @@
 /** Decode a `data:...;base64,...` URL into a File, or null if it isn't one. */
 function dataUrlToFile(dataUrl: unknown, fileName: string): File | null {
   if (typeof dataUrl !== "string") return null;
-  const match = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(dataUrl.trim());
+  // Per RFC 2397 a data URL is  data:[<mime>][;<param>...][;base64],<payload>.
+  // The whole meta section (mime + any params like `;charset=utf-8`) can carry
+  // extra `;`-separated parameters, so we grab everything up to the FIRST comma
+  // and pull the mime + base64 flag out of it. (The old regex only allowed a
+  // bare mime then an optional `;base64`, so a raw SVG QR carried as
+  // `data:image/svg+xml;charset=utf-8,...` failed to match and was dropped.)
+  const match = /^data:([^,]*?),(.*)$/s.exec(dataUrl.trim());
   if (!match) return null;
-  const mime = match[1] || "application/octet-stream";
-  const isBase64 = !!match[2];
-  const payload = match[3] ?? "";
+  const meta = match[1] ?? "";
+  const mime = meta.split(";")[0] || "application/octet-stream";
+  const isBase64 = /;base64/i.test(meta);
+  const payload = match[2] ?? "";
   try {
     let buffer: ArrayBuffer;
     if (isBase64) {
@@ -58,6 +65,54 @@ function dataUrlToFile(dataUrl: unknown, fileName: string): File | null {
 function textToFile(text: unknown, fileName: string, mime: string): File | null {
   if (typeof text !== "string" || !text.trim()) return null;
   return new File([text], fileName, { type: mime });
+}
+
+/**
+ * Rasterize an SVG data URL to a PNG File so a non-technical client always has a
+ * "drops into anything" copy alongside the scalable vector master. The QR is
+ * exported as SVG (sharp at any print size — business cards, Vistaprint, signage)
+ * but plain Word/email/slides won't place an SVG, so we ship BOTH. Browser-only
+ * (uses <canvas>); returns null on any failure so a bad/absent SVG never blocks
+ * the rest of the kit from loading.
+ */
+async function svgDataUrlToPng(
+  dataUrl: unknown,
+  fileName: string,
+  size = 1024,
+): Promise<File | null> {
+  if (typeof dataUrl !== "string" || !/^data:image\/svg\+xml/i.test(dataUrl)) return null;
+  if (typeof document === "undefined") return null;
+  try {
+    const img = new Image();
+    img.decoding = "async";
+    const loaded = new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("svg decode failed"));
+    });
+    img.src = dataUrl;
+    await loaded;
+    const canvas = document.createElement("canvas");
+    // Square QR; fall back to the requested size if the SVG has no intrinsic box.
+    const w = img.naturalWidth || size;
+    const h = img.naturalHeight || size;
+    const scale = Math.max(1, size / Math.max(w, h));
+    canvas.width = Math.round(w * scale);
+    canvas.height = Math.round(h * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    // White backing so a transparent SVG doesn't render black-on-black in viewers
+    // that composite onto a dark surface. A QR needs an opaque quiet zone anyway.
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/png"),
+    );
+    if (!blob) return null;
+    return new File([blob], fileName, { type: "image/png" });
+  } catch {
+    return null;
+  }
 }
 
 /* ------------------------------------------------------ naming helpers */
@@ -160,7 +215,7 @@ const EMPTY_FAIL = (error: string): KitParseResult => ({ files: [], kitLabel: nu
  * Tolerant of both the enveloped shape ({ type, v, board:{...} }) and a bare
  * board object. Never throws.
  */
-export function parseOpsetteKit(rawText: string): KitParseResult {
+export async function parseOpsetteKit(rawText: string): Promise<KitParseResult> {
   let parsed: unknown;
   try {
     parsed = JSON.parse(rawText);
@@ -210,8 +265,20 @@ export function parseOpsetteKit(rawText: string): KitParseResult {
     F_PALETTE,
   );
 
-  // QR code — sits at the root of the kit.
-  push(dataUrlToFile(board.qrDataUrl, "qr_code.png"), "qr_code.png", "");
+  // QR code — sits at the root of the kit. Brand Board / QR Creator export it as
+  // a scalable SVG (sharp at any print size). We ship BOTH the SVG master and a
+  // rasterized PNG so a non-technical client can drop the PNG into email/Word/
+  // slides while a printer or designer uses the vector. The old code hardcoded
+  // "qr_code.png" for what is really an SVG, mislabeling the file.
+  const qrExt = imageExt(board.qrDataUrl); // "svg" for the SVG QR
+  push(
+    dataUrlToFile(board.qrDataUrl, `qr_code.${qrExt}`),
+    `qr_code.${qrExt}`,
+    "",
+  );
+  if (qrExt === "svg") {
+    push(await svgDataUrlToPng(board.qrDataUrl, "qr_code.png"), "qr_code.png", "");
+  }
 
   // Digital card — the visual PNG plus, when present, the vCard (.vcf) the
   // client saves to their own phone contacts. dataUrlToFile reads the MIME, so
