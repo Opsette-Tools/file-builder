@@ -151,6 +151,7 @@ const F_SOCIAL = "Social_Banner";
 const F_ICONS = "Icons";
 const F_PALETTE = "Color_Palette";
 const F_BRAND_BOARD = "Brand_Board";
+const F_QR = "QR_Code";
 
 // Brand Board's own designed pages, baked into the kit as PNGs keyed by page id
 // (self-inclusion). Numbered so they sort in order in the client's folder,
@@ -265,19 +266,18 @@ export async function parseOpsetteKit(rawText: string): Promise<KitParseResult> 
     F_PALETTE,
   );
 
-  // QR code — sits at the root of the kit. Brand Board / QR Creator export it as
-  // a scalable SVG (sharp at any print size). We ship BOTH the SVG master and a
-  // rasterized PNG so a non-technical client can drop the PNG into email/Word/
-  // slides while a printer or designer uses the vector. The old code hardcoded
-  // "qr_code.png" for what is really an SVG, mislabeling the file.
+  // QR code — its own QR_Code folder, like every other asset family. Brand Board
+  // / QR Creator export it as a scalable SVG (sharp at any print size). We ship
+  // BOTH the SVG master and a rasterized PNG so a non-technical client can drop
+  // the PNG into email/Word/slides while a printer or designer uses the vector.
   const qrExt = imageExt(board.qrDataUrl); // "svg" for the SVG QR
   push(
     dataUrlToFile(board.qrDataUrl, `qr_code.${qrExt}`),
     `qr_code.${qrExt}`,
-    "",
+    F_QR,
   );
   if (qrExt === "svg") {
-    push(await svgDataUrlToPng(board.qrDataUrl, "qr_code.png"), "qr_code.png", "");
+    push(await svgDataUrlToPng(board.qrDataUrl, "qr_code.png"), "qr_code.png", F_QR);
   }
 
   // Digital card — the visual PNG plus, when present, the vCard (.vcf) the

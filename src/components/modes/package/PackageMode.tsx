@@ -6,6 +6,7 @@ import {
   PlusOutlined,
   ClearOutlined,
   FolderOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import type { ModeSurfaceProps } from "@/lib/modes";
 import { PanelHeader } from "@/components/shell/PanelHeader";
@@ -13,6 +14,7 @@ import { DropZone } from "@/components/shell/DropZone";
 import { usePackage } from "./PackageContext";
 import { BundleRow } from "./BundleRow";
 import { LoadKitButton } from "./LoadKitButton";
+import { PreviewModal } from "./PreviewModal";
 import { buildBundleZip, normalizeZipName } from "./buildZip";
 import "./package.css";
 
@@ -48,6 +50,7 @@ function triggerDownload(blob: Blob, fileName: string) {
 export function PackageCanvas({ isDark }: ModeSurfaceProps) {
   const { items, addFiles, clearAll } = usePackage();
   const addRef = useRef<HTMLInputElement>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Empty state: the big inviting drop zone (the hero). Any files, any number.
   // The "Load an Opsette kit" affordance lives BELOW the drop zone as a sibling,
@@ -98,6 +101,14 @@ export function PackageCanvas({ isDark }: ModeSurfaceProps) {
               e.target.value = "";
             }}
           />
+          <Button
+            type="primary"
+            ghost
+            icon={<EyeOutlined />}
+            onClick={() => setPreviewOpen(true)}
+          >
+            Preview
+          </Button>
           <Button icon={<PlusOutlined />} onClick={() => addRef.current?.click()}>
             Add files
           </Button>
@@ -107,6 +118,13 @@ export function PackageCanvas({ isDark }: ModeSurfaceProps) {
           </Button>
         </Space>
       </div>
+
+      <PreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        items={items}
+        isDark={isDark}
+      />
 
       {/* Whole list is also a drop target so you can drag more anywhere. */}
       <div

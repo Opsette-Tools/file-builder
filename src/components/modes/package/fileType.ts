@@ -65,3 +65,46 @@ export function typeKind(name: string, mime: string): "image" | "doc" | "other" 
   if (["pdf", "html", "htm", "doc", "docx", "txt", "md", "csv"].includes(ext)) return "doc";
   return "other";
 }
+
+/**
+ * How a file should be RENDERED in the preview gallery — a finer distinction than
+ * `typeKind` (which only colors a badge). Each value maps to one branch of the
+ * FilePreview renderer:
+ *   - "image": raster/vector the browser draws natively via an <img> object-URL.
+ *   - "pdf":   first page rendered to pixels through pdf.js.
+ *   - "html":  a true visual render inside a locked-down (scriptless) <iframe>.
+ *   - "text":  plain-text-ish content shown in a mono block (txt/md/csv/json/…,
+ *              and .vcf, which is just plain text so it previews for free).
+ *   - "none":  can't be rendered in-browser without heavy tooling (fonts, video,
+ *              audio, office docs, archives) — shown as an icon placeholder.
+ */
+export type PreviewKind = "image" | "pdf" | "html" | "text" | "none";
+
+const IMAGE_EXTS = ["png", "jpg", "jpeg", "webp", "gif", "svg", "ico", "bmp", "avif"];
+// Note: .vcf (and .ics) are technically plain text, but they render as raw
+// "BEGIN:VCARD…" field soup — not a meaningful preview — so they're deliberately
+// left OUT here and fall through to the clean icon placeholder instead.
+const TEXT_EXTS = [
+  "txt", "md", "markdown", "csv", "tsv", "json", "js", "mjs", "cjs", "ts",
+  "jsx", "tsx", "css", "scss", "less", "xml", "yml", "yaml",
+  "log", "env", "toml", "ini", "srt",
+];
+
+/** Classify a file into a single rendering strategy for the preview gallery. */
+export function previewKind(name: string, mime: string): PreviewKind {
+  const ext = extOf(name);
+  // vCard/iCal are plain text but preview as unreadable field soup — always send
+  // them to the icon placeholder, even if the browser tags them text/*.
+  if (ext === "vcf" || ext === "ics" || mime === "text/vcard" || mime === "text/calendar") {
+    return "none";
+  }
+  if (ext === "pdf" || mime === "application/pdf") return "pdf";
+  if (IMAGE_EXTS.includes(ext) || (mime.startsWith("image/") && mime !== "image/svg+xml") || mime === "image/svg+xml") {
+    return "image";
+  }
+  if (ext === "html" || ext === "htm" || mime === "text/html") return "html";
+  if (TEXT_EXTS.includes(ext) || mime.startsWith("text/") || mime === "application/json") {
+    return "text";
+  }
+  return "none";
+}
