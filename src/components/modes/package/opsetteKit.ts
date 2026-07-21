@@ -294,6 +294,14 @@ export async function parseOpsetteKit(rawText: string): Promise<KitParseResult> 
     `${brandStem}_contact.vcf`,
     F_CARD,
   );
+  // The vCard QR (data.qr) — the tap-to-save half: scan → the phone offers to
+  // save the contact. Baked by Digital Card (§2a), carried through Brand Board
+  // as cardQrDataUrl. Null on kits built before the QR bake, so push() no-ops.
+  push(
+    dataUrlToFile(board.cardQrDataUrl, `contact_qr.${imageExt(board.cardQrDataUrl)}`),
+    `contact_qr.${imageExt(board.cardQrDataUrl)}`,
+    F_CARD,
+  );
 
   // Email signature HTML.
   push(textToFile(board.signatureHtml, "signature.html", "text/html"), "signature.html", F_SIGNATURE);
