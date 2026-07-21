@@ -6,6 +6,8 @@ import { AppShell } from "@/components/shell/AppShell";
 import { PackageProvider } from "@/components/modes/package/PackageContext";
 import { OrganizeProvider } from "@/components/modes/organize/OrganizeContext";
 import { SignFillProvider } from "@/components/modes/signfill/SignFillContext";
+import { ImageWorkProvider } from "@/components/modes/image/ImageWorkContext";
+import { ImagesToPdfProvider } from "@/components/modes/imagepdf/ImagesToPdfContext";
 import type { ModeId } from "@/lib/modes";
 
 /**
@@ -38,11 +40,15 @@ export function FileBuilderApp() {
     <ThemeProvider>
       <AntApp>
         <PackageProvider>
-          <OrganizeProvider>
-            <SignFillProvider>
-              <FileBuilderInner />
-            </SignFillProvider>
-          </OrganizeProvider>
+          <ImageWorkProvider>
+            <ImagesToPdfProvider>
+              <OrganizeProvider>
+                <SignFillProvider>
+                  <FileBuilderInner />
+                </SignFillProvider>
+              </OrganizeProvider>
+            </ImagesToPdfProvider>
+          </ImageWorkProvider>
         </PackageProvider>
       </AntApp>
     </ThemeProvider>

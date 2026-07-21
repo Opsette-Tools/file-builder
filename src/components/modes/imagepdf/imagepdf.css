@@ -1,0 +1,27 @@
+/* Images → PDF: page tiles reuse the shared .fb-img-* grid, plus a page number
+   badge and a grab cursor for drag-to-reorder. */
+
+.fb-pdf-tile {
+  cursor: grab;
+}
+
+.fb-pdf-tile:active {
+  cursor: grabbing;
+}
+
+.fb-pdf-page-num {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 7px;
+  background: #d35400;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}

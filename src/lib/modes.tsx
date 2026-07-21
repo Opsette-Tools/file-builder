@@ -11,7 +11,10 @@ import {
 import { PackagePanel, PackageCanvas } from "@/components/modes/package/PackageMode";
 import { OrganizeCanvas, OrganizePanel } from "@/components/modes/organize/OrganizeMode";
 import { SignFillCanvas, SignFillPanel } from "@/components/modes/signfill/SignFillMode";
-import { ComingSoonPanel, ComingSoonCanvas } from "@/components/modes/ComingSoon";
+import { CompressCanvas, CompressPanel } from "@/components/modes/image/CompressMode";
+import { ConvertCanvas, ConvertPanel } from "@/components/modes/image/ConvertMode";
+import { ResizeCanvas, ResizePanel } from "@/components/modes/image/ResizeMode";
+import { ImagesToPdfCanvas, ImagesToPdfPanel } from "@/components/modes/imagepdf/ImagesToPdfMode";
 
 /**
  * The Mode registry — the single source of truth that drives the whole shell.
@@ -93,9 +96,9 @@ export const MODES: ModeDef[] = [
     icon: <CompressOutlined />,
     accent: "#c0392b",
     accepts: ["PNG", "JPG", "WebP"],
-    ready: false,
-    Canvas: ComingSoonCanvas,
-    Panel: ComingSoonPanel,
+    ready: true,
+    Canvas: CompressCanvas,
+    Panel: CompressPanel,
   },
   {
     id: "convert",
@@ -104,9 +107,9 @@ export const MODES: ModeDef[] = [
     icon: <SwapOutlined />,
     accent: "#8e44ad",
     accepts: ["PNG", "JPG", "WebP"],
-    ready: false,
-    Canvas: ComingSoonCanvas,
-    Panel: ComingSoonPanel,
+    ready: true,
+    Canvas: ConvertCanvas,
+    Panel: ConvertPanel,
   },
   {
     id: "resize",
@@ -115,9 +118,9 @@ export const MODES: ModeDef[] = [
     icon: <ExpandOutlined />,
     accent: "#2980b9",
     accepts: ["PNG", "JPG", "WebP"],
-    ready: false,
-    Canvas: ComingSoonCanvas,
-    Panel: ComingSoonPanel,
+    ready: true,
+    Canvas: ResizeCanvas,
+    Panel: ResizePanel,
   },
   {
     id: "images-to-pdf",
@@ -126,9 +129,9 @@ export const MODES: ModeDef[] = [
     icon: <FilePdfOutlined />,
     accent: "#d35400",
     accepts: ["PNG", "JPG", "WebP"],
-    ready: false,
-    Canvas: ComingSoonCanvas,
-    Panel: ComingSoonPanel,
+    ready: true,
+    Canvas: ImagesToPdfCanvas,
+    Panel: ImagesToPdfPanel,
   },
   {
     id: "organize",
